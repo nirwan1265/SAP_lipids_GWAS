@@ -3,15 +3,14 @@ library(dplyr)
 
 
 # Loading data
-A <- read.csv("data/SetA_lipid_FLO2020Control.csv")
-system("ls data/")
+A <- read.csv("data/SetB_lipid_FLO2022_lowP.csv")
 
 
 ###### Filtering just the Peak intensities 
 
 # Find column names that match the pattern "S1_Run" at the end
 selected_columns <- grep("S1_Run\\d+", colnames(A), value = TRUE)
-
+selected_columns <- grep("ISTD", colnames(A), value = TRUE)
 # Select the corresponding columns in your data frame A
 A_filtered <- A[, colnames(A) %in% selected_columns]
 
@@ -61,6 +60,13 @@ unique_scans <- pc_data %>%
   group_by(X.Scan.) %>%
   summarize(Compound_Name = toString(unique(Compound_Name)))
 
+
+unique_scans_all_lipid <- lipid %>%
+  group_by(X.Scan.) %>%
+  summarize(Compoundx_Name = toString(unique(Compound_Name)))
+
+
+
 # Create a function to add suffixes to duplicate row names
 add_suffix <- function(names) {
   counts <- table(names)
@@ -71,13 +77,17 @@ add_suffix <- function(names) {
 
 # Apply the function to Compound_Name in unique_scans
 unique_scans$Compound_Name <- add_suffix(unique_scans$Compound_Name)
+unique_scans_all_lipid$Compound_Name <- add_suffix(unique_scans_all_lipid$Compound_Name)
+
 
 # Subset rows in A_filtered using row names from unique_scans
 subset_A <- A_filtered[rownames(A_filtered) %in% unique_scans$X.Scan., ]
+subset_A_all_lipid <- A_filtered[rownames(A_filtered) %in% unique_scans_all_lipid$X.Scan., ]
 
 # Replace row names with the updated Compound_Name
 rownames(subset_A) <- unique_scans$Compound_Name
-
+rownames(subset_A_all_lipid) <- unique_scans_all_lipid$Compound_Name
+write.csv(subset_A_all_lipid,"SetB_all_lipids.csv")
 
 # Transpose the data frame A_PC
 A_PC_transposed <- as.data.frame(t(subset_A))
