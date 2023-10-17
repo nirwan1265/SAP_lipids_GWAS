@@ -1,5 +1,11 @@
+# Libraries
+library(dplyr)
+
+
 # Loading data
 A <- read.csv("data/SetA_lipid_FLO2020Control.csv")
+system("ls data/")
+
 
 ###### Filtering just the Peak intensities 
 
