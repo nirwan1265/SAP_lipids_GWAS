@@ -167,6 +167,35 @@ organism <- "Sorghum"
 chr <- 10
 preprocess_data <- preprocess(path, phenoname, chr,  organism)
 
+head(str(preprocess_data$pvalue))
 
-x <- preprocess_data[["pvalue"]][["pvalue1"]]
 
+
+pvalue_list <- preprocess_data[["pvalue"]]
+
+
+# Create an empty data frame to store the results
+result_df <- data.frame(Gene = character(0), pvalue = numeric(0))
+
+# Loop through the list of p-value data frames
+for (i in 1:length(pvalue_list)) {
+  pvalue_df <- pvalue_list[[i]]
+  
+  # Calculate the minimum p-value for each gene
+  min_pvalues <- apply(pvalue_df, 2, function(col) min(col, na.rm = TRUE))
+  
+  # Combine gene names and their corresponding minimum p-values into a data frame
+  gene_pvalue_df <- data.frame(Gene = names(min_pvalues), pvalue = min_pvalues)
+  
+  # Sort the data frame by minimum p-values in ascending order
+  gene_pvalue_df <- gene_pvalue_df[order(gene_pvalue_df$pvalue), ]
+  
+  # Get the top 2 genes with the lowest p-values
+  top_genes <- head(gene_pvalue_df, 2)
+  
+  # Add the results to the final data frame
+  result_df <- rbind(result_df, top_genes)
+}
+
+# Print the final result
+print(result_df)
