@@ -36,3 +36,12 @@ add_suffix <- function(names) {
 
 # Apply the function to Compound_Name in unique_scans
 unique_scans_all_lipid$Compound_Name <- add_suffix(unique_scans_all_lipid$Compound_Name)
+
+# Subset rows in A_filtered using row names from unique_scans
+subset_A <- A_filtered[rownames(A_filtered) %in% unique_scans$X.Scan., ]
+subset_B <- B_filtered[rownames(B_filtered) %in% unique_scans$X.Scan., ]
+head(A_filtered)
+str(B_filtered)
+A_filtered[1:5,1:5]
+write.csv(A_filtered,"ISTD_A.csv")
+write.csv(B_filtered,"ISTD_B.csv")
