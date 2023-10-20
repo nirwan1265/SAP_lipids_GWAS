@@ -199,3 +199,44 @@ for (i in 1:length(pvalue_list)) {
 
 # Print the final result
 print(result_df)
+
+
+# Assuming your data frame is called preprocess_data
+# Transpose the data frame
+transposed_data <- as.data.frame(t(preprocess_data[["pvalue"]][["pvalue7"]]))
+str(transposed_data)
+head(transposed_data)
+
+
+# Function to get the column name with the minimum value in each row
+get_min_col <- function(row) {
+  return(names(row)[which.min(row)])
+}
+
+# Apply the function row-wise to find the column with the minimum value in each row
+min_cols <- apply(transposed_data, 1, get_min_col)
+
+# Reorder the columns based on the minimum column for each row
+transposed_data <- transposed_data[, min_cols]
+
+# Print the first few rows to verify the result
+head(transposed_data)
+
+str(transposed_data)
+transposed_data[1:5,1:5]
+
+
+# Create an empty data frame to store the result
+result_df <- data.frame(Gene = rownames(transposed_data), pvalue = NA)
+
+# Loop through each row
+for (i in 1:nrow(transposed_data)) {
+  # Find the column name with the minimum value in the current row
+  min_col <- names(which.min(transposed_data[i, ]))
+  
+  # Assign the minimum pvalue to the result data frame
+  result_df$pvalue[i] <- transposed_data[i, min_col]
+}
+
+# Print the result data frame
+print(result_df)

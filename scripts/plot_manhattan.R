@@ -8,7 +8,7 @@ library(ggplot)
 library(data.table)
 
 #Need LMM GWAS file all assoc
-dir <- c("/Users/nirwantandukar/Library/Mobile Documents/com~apple~CloudDocs/Github/SAP_lipids_GWAS/results/gwas_results")
+dir <- c("/Users/nirwantandukar/Documents/SAP genotype/gwas_results/LowP")
 
 # List the files in the directory
 file_list <- list.files(path = dir, pattern = "\\.txt$", full.names = TRUE)
@@ -37,7 +37,7 @@ for (file in file_list) {
 
 # Create PC1 data frame
 PC1 <- df_list[[1]][, c(1:3, 4)]  # First sublist with columns 1-3 and 4
-for (i in 2:4) {
+for (i in 2) { #for (i in 2:4) {
   PC1 <- cbind(PC1, df_list[[i]][, 4])  # Append the fourth column from the remaining sublists
   colnames(PC1)[ncol(PC1)] <- colnames(df_list[[i]])[4]  # Use the column name from the sublist
 }
@@ -74,7 +74,7 @@ SNPs_1 <- PC1[
 #quartz()
 setwd("~/Desktop")
 
-CMplot(PC3, plot.type="m",multracks=TRUE,threshold=c(1e-6,1e-4),threshold.lty=c(1,2), 
+CMplot(PC1, plot.type="m",multracks=TRUE,threshold=c(1e-6,1e-4),threshold.lty=c(1,2), 
        threshold.lwd=c(1,1), threshold.col=c("black","grey"), amplify=TRUE,bin.size=1e6,
        chr.den.col=c("darkgreen", "yellow", "red"), signal.col=c("red","green"),
        signal.cex=0.5, file="jpg",dpi=300,file.output=TRUE,verbose=TRUE,
