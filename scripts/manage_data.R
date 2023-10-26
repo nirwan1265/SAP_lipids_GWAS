@@ -8,8 +8,6 @@ B <- read.csv("data/SetB_lipid_FLO2022_lowP.csv")
 # Find column names that match the pattern "S1_Run" at the end
 selected_columns_A <- grep("S1_Run\\d+", colnames(A), value = TRUE)
 selected_columns_B <- grep("S1_Run\\d+", colnames(B), value = TRUE)
-#selected_columns <- grep("ISTD", colnames(A), value = TRUE)
-
 
 # Select the corresponding columns in your data frame A
 A_filtered <- A[, colnames(A) %in% selected_columns_A]
@@ -144,4 +142,158 @@ PC_B <- grep("PC", subset_B$Compound_Name, value = TRUE)
 subset_A_PC <- as.data.frame(subset_A[subset_A$Compound_Name %in% PC_A, ])
 subset_B_PC <- as.data.frame(subset_B[subset_B$Compound_Name %in% PC_B, ])
 
+# Adding the Compounds
+subset_A_PC_unique <- subset_A_PC %>%
+  mutate(Compound_Prefix = sub("_[0-9]+$", "", Compound_Name))
+subset_B_PC_unique <- subset_B_PC %>%
+  mutate(Compound_Prefix = sub("_[0-9]+$", "", Compound_Name))
 
+
+# Group by Compound_Prefix and summarize the columns
+PC_A <- subset_A_PC_unique %>%
+  dplyr::group_by(Compound_Prefix) %>%
+  dplyr::summarize(across(starts_with("PI"), sum))
+PC_B <- subset_B_PC_unique %>%
+  dplyr::group_by(Compound_Prefix) %>%
+  dplyr::summarize(across(starts_with("PI"), sum))
+
+# Loop through rows in PC_A (excluding the first column)
+for (row_idx in 1:nrow(PC_A)) {
+  # Get the data for the current row
+  row_data <- PC_A[row_idx, -1]  # Exclude the first column
+  
+  # Find the minimum non-zero value in the row
+  min_nonzero_value <- min(row_data[row_data > 0], na.rm = TRUE)
+  
+  # Replace zero values with 2/3 of the minimum non-zero value
+  for (col_idx in 1:length(row_data)) {
+    if (row_data[col_idx] == 0) {
+      PC_A[row_idx, col_idx + 1] <- 2/3 * min_nonzero_value
+    }
+  }
+}
+
+for (row_idx in 1:nrow(PC_B)) {
+  # Get the data for the current row
+  row_data <- PC_B[row_idx, -1]  # Exclude the first column
+  
+  # Find the minimum non-zero value in the row
+  min_nonzero_value <- min(row_data[row_data > 0], na.rm = TRUE)
+  
+  # Replace zero values with 2/3 of the minimum non-zero value
+  for (col_idx in 1:length(row_data)) {
+    if (row_data[col_idx] == 0) {
+      PC_B[row_idx, col_idx + 1] <- 2/3 * min_nonzero_value
+    }
+  }
+}
+
+
+
+# Changing zero to 2/3 of the lowest value in row
+
+# Saving the file
+#write.csv(PC_A,"PC_A.csv",row.names=F)
+#write.csv(PC_B,"PC_B.csv",row.names=F)
+
+
+# Internal Standards
+A <- read.csv("data/SetA_lipid_FLO2019Control.csv")
+B <- read.csv("data/SetB_lipid_FLO2022_lowP.csv")
+
+selected_columns_ITSD_A <- grep("ISTD", colnames(A), value = TRUE)
+selected_columns_ITSD_B <- grep("ISTD", colnames(B), value = TRUE)
+
+ISTD_A <- A[, colnames(A) %in% selected_columns_ITSD_A]
+ISTD_B <- B[, colnames(B) %in% selected_columns_ITSD_B]
+
+rownames(ISTD_A) <- A[,1]
+rownames(ISTD_B) <- B[,1]
+
+pi_values_A <- paste0("PI",sub(".*_PI(\\d+)_.*", "\\1", selected_columns_ITSD_A))
+pi_values_B <- paste0("PI",sub(".*_PI(\\d+)_.*", "\\1", selected_columns_ITSD_B))
+
+colnames(ISTD_A) <- pi_values_A
+colnames(ISTD_B) <- pi_values_B
+
+ISTD_A <- ISTD_A[, !grepl("CHECK", names(ISTD_A))]
+ISTD_B <- ISTD_B[, !grepl("Check", names(ISTD_B))]
+
+ISTD_A$X.Scan. <- rownames(ISTD_A)
+ISTD_B$X.Scan. <- rownames(ISTD_B)
+
+
+subset_ISTD_A <- inner_join(unique_scans_all_lipid_A, ISTD_A,by ="X.Scan.")
+subset_ISTD_A <- subset_ISTD_A %>%
+  dplyr::select(-X.Scan.) %>%
+  dplyr::select(Compound_Name, everything())
+
+subset_ISTD_B <- inner_join(ISTD_B, unique_scans_all_lipid_B)
+subset_ISTD_B <- subset_ISTD_B %>%
+  dplyr::select(-X.Scan.) %>%
+  dplyr::select(Compound_Name, everything())
+
+subset_ISTD_A_unique <- subset_ISTD_A %>%
+  mutate(Compound_Prefix = sub("_[0-9]+$", "", Compound_Name))
+
+subset_ISTD_B_unique <- subset_ISTD_B %>%
+  mutate(Compound_Prefix = sub("_[0-9]+$", "", Compound_Name))
+
+PC_ISTD_A <- grep("PC", subset_ISTD_A_unique$Compound_Name, value = TRUE)
+PC_ISTD_B <- grep("PC", subset_ISTD_B_unique$Compound_Name, value = TRUE)
+
+# Subsetting the PCs
+subset_ISTD_A_PC <- as.data.frame(subset_ISTD_A_unique[subset_ISTD_A_unique$Compound_Name %in% PC_ISTD_A, ])
+subset_ISTD_B_PC <- as.data.frame(subset_ISTD_B_unique[subset_ISTD_B_unique$Compound_Name %in% PC_ISTD_B, ])
+
+ISTD_A_PC <- subset_ISTD_A_PC %>%
+  dplyr::group_by(Compound_Prefix) %>%
+  dplyr::summarize(across(starts_with("PI"), sum))
+
+ISTD_B_PC <- subset_ISTD_B_PC %>%
+  dplyr::group_by(Compound_Prefix) %>%
+  dplyr::summarize(across(starts_with("PI"), sum))
+
+
+# Calculate the row-wise average ISTD value for ISTD_A_PC
+ISTD_A_PC$Average_ISTD <- rowMeans(ISTD_A_PC[, -1], na.rm = TRUE)
+ISTD_B_PC$Average_ISTD <- rowMeans(ISTD_B_PC[, -1], na.rm = TRUE)
+
+# Define the compound of interest for normalizing
+compound_of_interest <- "PC(17:0/0:0); [M+H]+ C25H53N1O7P1"
+
+# Calculate the average ISTD value for the compound of interest
+average_value <- mean(ISTD_A_PC$Average_ISTD[ISTD_A_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
+
+# Normalize PC_A using the average ISTD value for the compound of interest
+for (genotype_col in colnames(PC_A)[-1]) {
+  # Find the corresponding compound for this genotype column
+  compound <- gsub("^PI", "", genotype_col)  # Extract compound name
+  
+  # Extract data for the current genotype
+  data_A <- PC_A[, genotype_col]
+  
+  # Normalize PC_A using the average ISTD value for the compound of interest
+  normalized_value <- data_A / average_value
+  
+  # Assign the normalized value back to PC_A
+  PC_A[, genotype_col] <- normalized_value
+}
+
+
+average_value <- mean(ISTD_B_PC$Average_ISTD[ISTD_B_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
+
+# Normalize PC_A using the average ISTD value for the compound of interest
+for (genotype_col in colnames(PC_B)[-1]) {
+  # Find the corresponding compound for this genotype column
+  compound <- gsub("^PI", "", genotype_col)  # Extract compound name
+  
+  # Extract data for the current genotype
+  data_B <- PC_B[, genotype_col]
+  
+  # Normalize PC_A using the average ISTD value for the compound of interest
+  normalized_value <- data_B / average_value
+  
+  # Assign the normalized value back to PC_A
+  PC_B[, genotype_col] <- normalized_value
+}
