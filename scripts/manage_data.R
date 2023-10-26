@@ -15,6 +15,7 @@ selected_columns_B <- grep("S1_Run\\d+", colnames(B), value = TRUE)
 A_filtered <- A[, colnames(A) %in% selected_columns_A]
 B_filtered <- B[, colnames(B) %in% selected_columns_B]
 
+
 # Extract the "PI" values from the selected column names
 pi_values_A <- paste0("PI",sub(".*_PI(\\d+)_.*", "\\1", selected_columns_A))
 pi_values_B <- paste0("PI",sub(".*_PI(\\d+)_.*", "\\1", selected_columns_B))
@@ -26,6 +27,11 @@ colnames(B_filtered) <- pi_values_B
 # Adding colnames
 rownames(A_filtered) <- A[,1]
 rownames(B_filtered) <- B[,1]
+rm(A,B)
+
+# Removing CHECKs
+A_filtered <- A_filtered[, !grepl("CHECK", names(A_filtered))]
+B_filtered <- B_filtered[, !grepl("Check", names(B_filtered))]
 
 
 # Set the threshold for proportion of zeroes you want to remove
@@ -41,15 +47,20 @@ columns_to_keep_B <- which(zero_proportions_B < threshold)
 
 # Subset A_filtered to include only the selected columns
 A_filtered <- A_filtered[, columns_to_keep_A]
+A_filtered$X.Scan. <- rownames(A_filtered)
 B_filtered <- B_filtered[, columns_to_keep_B]
+B_filtered$X.Scan. <- rownames(B_filtered)
 
 
 #write.csv(A_filtered,"results/A_filtered.csv", row.names = T)
 #write.csv(B_filtered,"results/B_filtered.csv", row.names = T)
 
 ##### Filtering based on lipids
-lipid <- read.csv("data/lipid_class.csv")  
-lipid$X.Scan. <- as.character(lipid$X.Scan.)
+lipid_A <- read.csv("data/lipid_class_A.csv")
+lipid_A$X.Scan. <- as.character(lipid_A$X.Scan.)
+lipid_B <- read.csv("data/lipid_class_B.csv")
+lipid_B$X.Scan. <- as.character(lipid_B$X.Scan.)
+
 # Filtering only PC's
 # Create a logical vector indicating rows where Compound_Name starts with "PC"
 #pc_names <- grepl("^PC", lipid$Compound_Name)
@@ -66,15 +77,32 @@ lipid$X.Scan. <- as.character(lipid$X.Scan.)
 
 
 # Unique ID's  
+unique_scans_all_lipid_A <- lipid_A %>%
+  dplyr::select(Compound_Name,X.Scan.)
+unique_scans_all_lipid_B <- lipid_B %>%
+  dplyr::select(Compound_Name,X.Scan.)
 
-unique_scans_all_lipid <- lipid %>%
-  dplyr::group_by(X.Scan.) %>%
-  dplyr::summarize(Compound_Name = toString(unique(Compound_Name)))
 
-
+# Group and summarize unique_scans_all_lipid to concatenate Compound_Name values
+# result <- unique_scans_all_lipid %>%
+#   dplyr::group_by(X.Scan.) %>%
+#   dplyr::summarize(Compound_Name = paste(Compound_Name, collapse = ","))
+# 
+# # Merge the summarized data with A_filtered based on X.Scan.
+# A_filtered_lipid <- inner_join(result, A_filtered, by = "X.Scan.")
+# B_filtered_lipid <- inner_join(result, B_filtered, by = "X.Scan.")
+# 
+# 
+# length(unique(unique_scans_all_lipid$X.Scan.))
+# length(unique(A_filtered$X.Scan.))
+# length(unique(B_filtered$X.Scan.))
+# 
+# length(intersect(unique(A_filtered$X.Scan.),unique(B_filtered$X.Scan.)))
+# length(intersect(A_filtered_lipid$X.Scan.,B_filtered_lipid$X.Scan.))
+# intersect(A_filtered_lipid$Compound_Name,B_filtered_lipid$Compound_Name)
 
 # Process duplicates
-unique_scans_all_lipid$Compound_Name <- with(unique_scans_all_lipid, ave(Compound_Name, Compound_Name, FUN = function(x) {
+unique_scans_all_lipid_A$Compound_Name <- with(unique_scans_all_lipid_A, ave(Compound_Name, Compound_Name, FUN = function(x) {
   if (length(x) > 1) {
     return(paste0(x, "_", 1:length(x)))
   } else {
@@ -82,85 +110,38 @@ unique_scans_all_lipid$Compound_Name <- with(unique_scans_all_lipid, ave(Compoun
   }
 }))
 
+unique_scans_all_lipid_B$Compound_Name <- with(unique_scans_all_lipid_B, ave(Compound_Name, Compound_Name, FUN = function(x) {
+  if (length(x) > 1) {
+    return(paste0(x, "_", 1:length(x)))
+  } else {
+    return(x)
+  }
+}))
+
+
 # Convert X.Scan. column to character type
-unique_scans_all_lipid$X.Scan. <- as.character(unique_scans_all_lipid$X.Scan.)
+unique_scans_all_lipid_A$X.Scan. <- as.character(unique_scans_all_lipid_A$X.Scan.)
+unique_scans_all_lipid_B$X.Scan. <- as.character(unique_scans_all_lipid_B$X.Scan.)
 
 # Subset rows in A_filtered using row names from unique_scans
-#subset_A <- A_filtered[rownames(A_filtered) %in% unique_scans$X.Scan., ]
-# Convert rownames to a column
-A_filtered <- A_filtered %>%
-  mutate(rowname_col = rownames(A_filtered))
-
-B_filtered <- B_filtered %>%
-  mutate(rowname_col = rownames(B_filtered))
-
-# Perform the inner join
-subset_A_all_lipid <- inner_join(A_filtered, lipid, 
-                                 by = c("rowname_col" = "X.Scan."))
-
-subset_B_all_lipid <- inner_join(B_filtered, lipid, 
-                                 by = c("rowname_col" = "X.Scan."))
-
-subset_A_all_lipid <- subset_A_all_lipid[, c(ncol(subset_A_all_lipid), 1:(ncol(subset_A_all_lipid)-1))]
-
-subset_B_all_lipid <- subset_B_all_lipid[, c(ncol(subset_B_all_lipid), 1:(ncol(subset_B_all_lipid)-1))]
+subset_A <- inner_join(A_filtered, unique_scans_all_lipid_A)
+subset_A <- subset_A %>%
+  dplyr::select(-X.Scan.) %>%
+  dplyr::select(Compound_Name, everything())
+  
+subset_B <- inner_join(B_filtered, unique_scans_all_lipid_B)
+subset_B <- subset_B %>%
+  dplyr::select(-X.Scan.) %>%
+  dplyr::select(Compound_Name, everything())
 
 
-write.csv(subset_A_all_lipid,"SetA_all_lipids.csv")
-write.csv(subset_B_all_lipid,"SetB_all_lipids.csv")
+# Subsetting just the PC's
+# Extract the "PC" values from the selected column names
+PC_A <- grep("PC", subset_A$Compound_Name, value = TRUE)
+PC_B <- grep("PC", subset_B$Compound_Name, value = TRUE)
 
-# Transpose the data frame A_PC
-A_PC_transposed <- as.data.frame(t(subset_A))
-
-# Identify rows with "CHECK" in row names and remove them
-A_PC_transposed <- A_PC_transposed[!grepl("CHECK", rownames(A_PC_transposed)),, drop = FALSE]
-
-
-
-
-# Filtering only PC's
-# Create a logical vector indicating rows where Compound_Name starts with "PC"
-lpc_names <- grepl("LPC", lipid$Compound_Name)
-
-# Subset the data frame to include only rows with PC names
-lpc_data <- lipid[lpc_names, ]
-
-# View the first few rows of the subsetted data frame
-str(lpc_data)
-
-unique_scans <- lpc_data %>%
-  group_by(X.Scan.) %>%
-  summarize(Compound_Name = toString(unique(Compound_Name)))
-
-# Create a function to add suffixes to duplicate row names
-add_suffix <- function(names) {
-  counts <- table(names)
-  suffixes <- ave(seq_along(names), names, FUN = function(x) seq_len(length(x)) - 1)
-  suffixes[suffixes > 0] <- sprintf("_%d", suffixes[suffixes > 0])
-  paste(names, suffixes, sep = "")
-}
-
-# Apply the function to Compound_Name in unique_scans
-unique_scans$Compound_Name <- add_suffix(unique_scans$Compound_Name)
-
-# Subset rows in A_filtered using row names from unique_scans
-subset_A <- A_filtered[rownames(A_filtered) %in% unique_scans$X.Scan., ]
-
-# Replace row names with the updated Compound_Name
-rownames(subset_A) <- unique_scans$Compound_Name
-
-
-# Transpose the data frame A_lpc
-A_LPC_transposed <- as.data.frame(t(subset_A))
-
-# Identify rows with "CHECK" in row names and remove them
-A_LPC_transposed <- A_LPC_transposed[!grepl("CHECK", rownames(A_LPC_transposed)),, drop = FALSE]
-
-
-#Combining the data
-A_PC_LPC <- cbind(A_PC_transposed,A_LPC_transposed)
-
-write.csv(A_PC_LPC,"A_PC_LPC.csv", row.names = T)
-
+# Subsetting the PCs
+subset_A_PC <- as.data.frame(subset_A[subset_A$Compound_Name %in% PC_A, ])
+subset_B_PC <- as.data.frame(subset_B[subset_B$Compound_Name %in% PC_B, ])
 
 

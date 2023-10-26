@@ -18,4 +18,3 @@ BiocManager::install(c("GenomicAlignments", "rtracklayer", "multtest", "ACAT", "
 remotes::install_github("yaowuliu/ACAT")
 
 suppressMessages(invisible(lapply(packages, library, character.only = TRUE)))
-
