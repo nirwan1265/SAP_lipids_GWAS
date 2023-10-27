@@ -297,3 +297,26 @@ for (genotype_col in colnames(PC_B)[-1]) {
   # Assign the normalized value back to PC_A
   PC_B[, genotype_col] <- normalized_value
 }
+
+
+# saving
+PC_A <- PC_A %>%
+  mutate(Compound_Prefix = sub(";.*", "", Compound_Prefix)) %>%
+  mutate(Compound_Prefix = str_replace_all(Compound_Prefix, "[^A-Za-z0-9]+", "_")) %>%
+  t() %>%
+  as.data.frame() 
+colnames(PC_A) <- unlist(PC_A[1,])
+PC_A <- PC_A[-1,]
+
+PC_B <- PC_B %>%
+  mutate(Compound_Prefix = sub(";.*", "", Compound_Prefix)) %>%
+  mutate(Compound_Prefix = str_replace_all(Compound_Prefix, "[^A-Za-z0-9]+", "_")) %>%
+  t() %>%
+  as.data.frame() 
+colnames(PC_B) <- unlist(PC_B[1,])
+PC_B <- PC_B[-1,]
+
+
+#Save
+write.csv(PC_A,"PC_A.csv")
+write.csv(PC_B,"PC_B.csv")
