@@ -263,7 +263,7 @@ ISTD_B_PC$Average_ISTD <- rowMeans(ISTD_B_PC[, -1], na.rm = TRUE)
 compound_of_interest <- "PC(17:0/0:0); [M+H]+ C25H53N1O7P1"
 
 # Calculate the average ISTD value for the compound of interest
-average_value <- mean(ISTD_A_PC$Average_ISTD[ISTD_A_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
+average_value_A <- mean(ISTD_A_PC$Average_ISTD[ISTD_A_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
 
 # Normalize PC_A using the average ISTD value for the compound of interest
 for (genotype_col in colnames(PC_A)[-1]) {
@@ -281,7 +281,7 @@ for (genotype_col in colnames(PC_A)[-1]) {
 }
 
 
-average_value <- mean(ISTD_B_PC$Average_ISTD[ISTD_B_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
+average_value_B <- mean(ISTD_B_PC$Average_ISTD[ISTD_B_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
 
 # Normalize PC_A using the average ISTD value for the compound of interest
 for (genotype_col in colnames(PC_B)[-1]) {
@@ -318,5 +318,14 @@ PC_B <- PC_B[-1,]
 
 
 #Save
-write.csv(PC_A,"PC_A.csv")
-write.csv(PC_B,"PC_B.csv")
+#write.csv(PC_A,"PC_A.csv")
+#write.csv(PC_B,"PC_B.csv")
+
+
+
+
+plot(ISTD_A[1,-1],ISTD_B[1,-1])
+ncol(ISTD_A[])
+ncol(ISTD_B)
+
+intersect(ISTD_A_PC[1,-1],ISTD_B_PC[1,-1])
