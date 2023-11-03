@@ -190,7 +190,7 @@ for (row_idx in 1:nrow(PC_B)) {
 
 
 
-# Changing zero to 2/3 of the lowest value in row
+
 
 # Saving the file
 #write.csv(PC_A,"PC_A.csv",row.names=F)
@@ -260,10 +260,10 @@ ISTD_A_PC$Average_ISTD <- rowMeans(ISTD_A_PC[, -1], na.rm = TRUE)
 ISTD_B_PC$Average_ISTD <- rowMeans(ISTD_B_PC[, -1], na.rm = TRUE)
 
 # Define the compound of interest for normalizing
-compound_of_interest <- "PC(17:0/0:0); [M+H]+ C25H53N1O7P1"
+compound_of_interest <- "PC(16:0/18:1); [M+H]+ C42H83N1O8P1"
 
 # Calculate the average ISTD value for the compound of interest
-average_value_A <- mean(ISTD_A_PC$Average_ISTD[ISTD_A_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
+average_value <- mean(ISTD_A_PC$Average_ISTD[ISTD_A_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
 
 # Normalize PC_A using the average ISTD value for the compound of interest
 for (genotype_col in colnames(PC_A)[-1]) {
@@ -280,8 +280,7 @@ for (genotype_col in colnames(PC_A)[-1]) {
   PC_A[, genotype_col] <- normalized_value
 }
 
-
-average_value_B <- mean(ISTD_B_PC$Average_ISTD[ISTD_B_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
+average_value <- mean(ISTD_B_PC$Average_ISTD[ISTD_B_PC$Compound_Prefix == compound_of_interest], na.rm = TRUE)
 
 # Normalize PC_A using the average ISTD value for the compound of interest
 for (genotype_col in colnames(PC_B)[-1]) {
@@ -307,6 +306,7 @@ PC_A <- PC_A %>%
   as.data.frame() 
 colnames(PC_A) <- unlist(PC_A[1,])
 PC_A <- PC_A[-1,]
+PC_A <- as.data.frame(lapply(PC_A, as.numeric))
 
 PC_B <- PC_B %>%
   mutate(Compound_Prefix = sub(";.*", "", Compound_Prefix)) %>%
@@ -315,6 +315,42 @@ PC_B <- PC_B %>%
   as.data.frame() 
 colnames(PC_B) <- unlist(PC_B[1,])
 PC_B <- PC_B[-1,]
+PC_B <- as.data.frame(lapply(PC_B, as.numeric))
+
+max(PC_A[,"PC_18_1_20_1_"])
+max(PC_B[,"PC_18_1_20_1_"])
+
+min(PC_A$Massbank_PR310840_LPC_18_3)
+min(PC_B$Massbank_PR310840_LPC_18_3)
+
+mean(PC_A$Massbank_PR310840_LPC_18_3)
+mean(PC_B$Massbank_PR310840_LPC_18_3)
+
+
+
+hist(PC_A$Massbank_PR310840_LPC_18_3)
+d <- density(PC_A$Massbank_PR310840_LPC_18_3)
+plot(d)
+d <- density(log10(PC_A$Massbank_PR310840_LPC_18_3))
+
+
+# Sample data
+data <- PC_A$Massbank_PR310840_LPC_18_3
+
+# Normalize by median
+normalized_data <- data / median(data)
+
+# Apply log10
+log_normalized_data <- log10(normalized_data)
+
+# Calculate the median of log10 values
+median_log_normalized <- median(log_normalized_data)
+
+plot(median_log_normalized)
+# Print the results
+cat("Normalized Data:\n", normalized_data, "\n")
+cat("Log10 of Normalized Data:\n", log_normalized_data, "\n")
+cat("Median of Log10 of Normalized Data:\n", median_log_normalized, "\n")
 
 
 #Save
@@ -323,9 +359,5 @@ PC_B <- PC_B[-1,]
 
 
 
-
-plot(ISTD_A[1,-1],ISTD_B[1,-1])
-ncol(ISTD_A[])
-ncol(ISTD_B)
 
 intersect(ISTD_A_PC[1,-1],ISTD_B_PC[1,-1])

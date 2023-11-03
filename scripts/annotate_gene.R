@@ -162,7 +162,7 @@ preprocess <- function(path, phenoname, n, organism){
 }
 
 path <- "/Users/nirwantandukar/Library/Mobile Documents/com~apple~CloudDocs/Github/COMP_GWAS/data"
-phenoname="PC_18_2__0_0"
+phenoname="PC_18_1_20_1_"
 organism <- "Sorghum"
 chr <- 10
 preprocess_data <- preprocess(path, phenoname, chr,  organism)

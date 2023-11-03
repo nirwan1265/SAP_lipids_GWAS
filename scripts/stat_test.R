@@ -1,8 +1,8 @@
 # Find common compounds between PC_A and PC_B
-common_compounds <- intersect(PC_A$Compound_Prefix, PC_B$Compound_Prefix)
+common_compounds <- intersect(colnames(PC_A), colnames(PC_B))
 
 # Subset the data frames to include only common compounds
-common_compounds_A <- PC_A[PC_A$Compound_Prefix %in% common_compounds, ]
+common_compounds_A <- PC_A[PC_A %in% common_compounds]
 common_compounds_B <- PC_B[PC_B$Compound_Prefix %in% common_compounds, ]
 
 
