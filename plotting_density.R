@@ -16,13 +16,31 @@ centered_log10_df <- sapply(1:ncol(log10_transformed_df), function(col_index) {
 
 
 par(mfrow = c(5, 3))
+for (i in 6:10){
+  d <- density(PC_A[,i])
+  plot(d, main = colnames(PC_A[i]), col="red", ylim = c(0, max(d$y)))
+  e <- density(log10_transformed_df[,i])
+  plot(e, main=colnames(PC_A[i]), col="blue", ylim = c(0, max(e$y)))
+  f <- density(centered_log10_df[,i])
+  plot(f, main=colnames(PC_A[i]), col="green", ylim = c(0, max(f$y)))
+}
 
-d <- density(PC_A[,5])
-plot(d)
-e <- density(log10_transformed_df[,5])
-plot(e)
-f <- density(centered_log10_df[,5])
-plot(f)
+par(mfrow = c(5, 3))
+
+library(ggplot2)
 
 
+library(sm)
+attach(mtcars)
 
+# create value labels
+cyl.f <- factor(cyl, levels= c(4,6,8),
+                labels = c("4 cylinder", "6 cylinder", "8 cylinder"))
+
+# plot densities
+sm.density.compare(mpg, cyl, xlab="Miles Per Gallon")
+title(main="MPG Distribution by Car Cylinders")
+
+# add legend via mouse click
+colfill<-c(2:(2+length(levels(cyl.f))))
+legend(locator(1), levels(cyl.f), fill=colfill)

@@ -328,29 +328,8 @@ mean(PC_B$Massbank_PR310840_LPC_18_3)
 
 
 
-hist(PC_A$Massbank_PR310840_LPC_18_3)
-d <- density(PC_A$Massbank_PR310840_LPC_18_3)
-plot(d)
-d <- density(log10(PC_A$Massbank_PR310840_LPC_18_3))
 
 
-# Sample data
-data <- PC_A$Massbank_PR310840_LPC_18_3
-
-# Normalize by median
-normalized_data <- data / median(data)
-
-# Apply log10
-log_normalized_data <- log10(normalized_data)
-
-# Calculate the median of log10 values
-median_log_normalized <- median(log_normalized_data)
-
-plot(median_log_normalized)
-# Print the results
-cat("Normalized Data:\n", normalized_data, "\n")
-cat("Log10 of Normalized Data:\n", log_normalized_data, "\n")
-cat("Median of Log10 of Normalized Data:\n", median_log_normalized, "\n")
 
 
 #Save
