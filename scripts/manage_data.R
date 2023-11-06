@@ -331,7 +331,6 @@ mean(PC_B$Massbank_PR310840_LPC_18_3)
 
 
 
-
 #Save
 #write.csv(PC_A,"PC_A.csv")
 #write.csv(PC_B,"PC_B.csv")
