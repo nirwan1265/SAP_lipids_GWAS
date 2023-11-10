@@ -117,7 +117,7 @@ str(sig_common_compounds_A)
 str(sig_common_compounds_B)
 
 
-# ######
+# 
 # common_compounds <- intersect(colnames(PC_A), colnames(PC_B))
 # 
 # # Subset the data frames to include only common compounds
@@ -129,7 +129,7 @@ str(sig_common_compounds_B)
 # # Log10 transform the data frames common_compounds_A and common_compounds_B
 # common_compounds_A_log10 <- log10(common_compounds_A)
 # common_compounds_B_log10 <- log10(common_compounds_B)
-# 
+#
 # # Calculate the median for each column in the log10-transformed data frames
 # median_A <- apply(common_compounds_A_log10, 2, median)
 # median_B <- apply(common_compounds_B_log10, 2, median)
