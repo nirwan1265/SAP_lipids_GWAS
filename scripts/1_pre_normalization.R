@@ -1,4 +1,5 @@
 library(stringr)
+library(purrr)
 ################################################################################
 ############ Loading the Quantitative Peaks Intensities.  ######################
 ################################################################################
@@ -36,13 +37,36 @@ str(sorted_indices)
 A_peaks <- A_peaks[, sorted_indices]
 A_peaks[1:5,1:10]
 
+head(A_peaks)
 
 # Final Table
 A <- cbind(A_id,A_peaks)
 
+# Removing compounds that have values 10 times less than blanks
+# Calculate the minimum value for the "S1_Run*" columns only
+A$Min_S1_Run <- apply(A[, grepl("^S1_Run", colnames(A))], 1, min)
+# Calculate the average of InjBL.334_Run* columns
+A$InjBL.334_Avg <- apply(A[, grepl("^InjBL\\.334_Run", colnames(A))], 1, max)
+#A$InjBL.334_Avg <- rowMeans(A[, grepl("^InjBL\\.334_Run", colnames(A))])
+# Create a logical vector to identify rows that meet the condition
+condition_met <- A$Min_S1_Run >= 10 * A$InjBL.334_Avg
+
+# Subset the data frame to keep only the rows where the condition is met
+A <- A[condition_met, ]
+# Remove the "Min_S1_Run" and "InjBL.334_Avg" columns
+A_peaks <- A_peaks[, !grepl("^(Min_S1_Run|InjBL\\.334_Avg)$", colnames(A_peaks))]
+
+
 #Removing columns with InjBL cause SERRF does not want it
 A <- A %>%
   dplyr::select(-contains("InjBL"))
+
+
+# Filtering relevant columns
+relevant_cols <- grep("^S1_Run", names(A), value = TRUE)
+A <- A %>%
+  dplyr::select(all_of(relevant_cols)) %>%
+  dplyr::select(where(~ mean(.x == 0) <= 0.3))
 
 
 # Create a new row with labels based on column names
@@ -74,7 +98,7 @@ A <- rbind(new_row, A)
 
 # Adding sample numbers
 # Get the number of columns in A_peaks
-num_cols <- ncol(A_peaks) - 1
+num_cols <- ncol(A) - 1
 
 # Create a new row with increasing numbers from 1 to num_cols
 new_row <- c("time", 1:num_cols)
@@ -83,4 +107,3 @@ new_row <- c("time", 1:num_cols)
 A <- rbind(new_row, A)
 
 
-write.csv(A,"SERRF_control.csv")
